@@ -1,0 +1,219 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧟‍♀️ Sentiment Analysis 🧠</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #0cab24, #4d8949);
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: #ecb1b1;
+            padding: 2rem;
+            border-radius: 25px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+            max-width: 800px; /* Adjust width as needed */
+            width: 90%; /* Adjust width as needed */
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #6b73ff, #000dff);
+            border: none;
+            border-radius: 12px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .btn-primary:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        textarea {
+            border-radius: 10px;
+        }
+
+        #result h3 {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .meter {
+            position: relative;
+            width: 300px;
+            height: 150px;
+            margin: 0 auto;
+            border-radius: 150px 150px 0 0;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s, box-shadow 0.3s;
+            background: #984d10;
+        }
+
+        .meter:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .meter::before {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-left: 150px solid transparent;
+            border-right: 150px solid transparent;
+            border-top: 75px solid #941c50;
+            transform: translateX(-50%);
+        }
+
+        .needle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 75%;
+            background: #000;
+            transform-origin: bottom;
+            transition: transform 0.5s ease;
+        }
+
+        .positive {
+            background: linear-gradient(135deg, #a3e635, #4ade80);
+            border-radius: 150px 150px 0 0;
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 50%;
+            height: 100%;
+        }
+
+        .negative {
+            background: linear-gradient(135deg, #f87171, #ef4444);
+            border-radius: 150px 150px 0 0;
+            position: absolute;
+            top: 0;
+            right: 50%;
+            width: 50%;
+            height: 100%;
+        }
+
+        .emoji {
+            font-size: 3rem;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            transition: transform 0.5s ease;
+        }
+
+        .emoji.left {
+            left: 25%;
+        }
+
+        .emoji.right {
+            right: 25%;
+        }
+
+        .bounce {
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(-50%) scale(1);
+            }
+            50% {
+                transform: translateY(-50%) scale(1.1);
+            }
+        }
+
+        .title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 2rem;
+        }
+
+        .title span {
+            font-size: 3rem;
+        }
+    </style>
+</head>
+<body class="bg-gradient">
+    <div class="container mt-5 text-center shadow">
+        <h1 class="title">🧟‍♀️ Sentiment Analysis 🧠</h1>
+        <div id="sentiment-meter" class="mx-auto mb-4 meter">
+            <div class="positive"></div>
+            <div class="negative"></div>
+            <div class="needle" id="needle"></div>
+            <div class="emoji left" id="negative-emoji">😢</div>
+            <div class="emoji right" id="positive-emoji">😊</div>
+        </div>
+        <form id="sentiment-form" method="post">
+            {% csrf_token %}
+            <div class="mb-3">
+                <textarea class="form-control" id="text" name="text" rows="3" placeholder="Enter text here..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary btn-lg shadow-sm">Predict ✨</button>
+        </form>
+        <div id="result" class="mt-4"></div>
+    </div>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+        let needleMovement;
+
+        $('#sentiment-form').on('submit', function(e) {
+            e.preventDefault();
+            clearInterval(needleMovement);
+            const text = $('#text').val();
+            if (text) {
+                $.ajax({
+                    type: 'POST',
+                    url: '',
+                    data: $(this).serialize(),
+                    success: function(response) {
+                        $('#result').html(`<h3>${response.prediction}</h3>`);
+                        updateMeter(response.prediction);
+                    }
+                });
+            }
+        });
+
+        function updateMeter(prediction) {
+            const needle = document.getElementById('needle');
+            const positiveEmoji = document.getElementById('positive-emoji');
+            const negativeEmoji = document.getElementById('negative-emoji');
+
+            if (prediction === 'Positive') {
+                needle.style.transform = 'rotate(45deg)';
+                positiveEmoji.classList.add('bounce');
+                negativeEmoji.classList.remove('bounce');
+            } else {
+                needle.style.transform = 'rotate(-45deg)';
+                negativeEmoji.classList.add('bounce');
+                positiveEmoji.classList.remove('bounce');
+            }
+        }
+
+        function toAndFroMovement() {
+            const needle = document.getElementById('needle');
+            needleMovement = setInterval(() => {
+                needle.style.transform = `rotate(${Math.random() * 20 - 10}deg)`;
+            }, 500);
+        }
+
+        $(document).ready(function() {
+            toAndFroMovement();
+        });
+    </script>
+</body>
+</html>
